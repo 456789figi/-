@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Ближе — игра для двоих</title>
+<meta name="description" content="Игра-диалог для пары: узнавайте друг друга глубже, шаг за шагом.">
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#e79c78">
+<link rel="icon" href="/icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ближе">
+<meta name="mobile-web-app-capable" content="yes">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#faf1e6;
+    --cream-2:#f3e3d3;
+    --peach:#eab98a;
+    --coral:#e2865f;
+    --coral-2:#d9704a;
+    --mauve:#b98a95;
+    --plum:#7c5468;
+    --brown:#4a352e;
+    --brown-deep:#2f211c;
+    --ink:#3c2b26;
+    --ink-soft:#6b5750;
+    --gold:#e8b96a;
+    --card:#fffaf3;
+    --card-border:#ecd9c3;
+    --shadow: 0 20px 50px -20px rgba(74,53,46,0.35);
+    --bg: linear-gradient(160deg,#f7e3ce 0%, #f1c9ab 28%, #e79c78 52%, #cf8095 76%, #9c7592 100%);
+    --accent: var(--coral-2);
+    --accent-soft: var(--peach);
+    --success:#8a9a6b;
+    --radius: 22px;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --cream:#241a17;
+      --cream-2:#2c211d;
+      --card:#2b201c;
+      --card-border:#4a372f;
+      --ink:#f3e6dd;
+      --ink-soft:#cdb6ab;
+      --bg: linear-gradient(160deg,#241a17 0%, #3a241f 30%, #5c332f 55%, #6b3a49 78%, #43304a 100%);
+      --shadow: 0 20px 50px -20px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --cream:#241a17;
+    --cream-2:#2c211d;
+    --card:#2b201c;
+    --card-border:#4a372f;
+    --ink:#f3e6dd;
+    --ink-soft:#cdb6ab;
+    --bg: linear-gradient(160deg,#241a17 0%, #3a241f 30%, #5c332f 55%, #6b3a49 78%, #43304a 100%);
+    --shadow: 0 20px 50px -20px rgba(0,0,0,0.6);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Manrope', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    width:100%;
+    max-width:560px;
+    min-height:100vh;
+    padding:0 0 40px 0;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  h1,h2,h3{font-family:'Playfair Display', serif; margin:0; font-weight:700;}
+  .screen{display:none; flex-direction:column; flex:1; padding:28px 22px 10px;}
+  .screen.active{display:flex;}
+  /* ---------- Landing ---------- */
+  #screen-landing{
+    justify-content:space-between;
+    align-items:center;
+    text-align:center;
+    padding-top:0;
+    min-height:100vh;
+  }
+  .landing-top{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; width:100%;}
+  .logo-mark{
+    width:132px;height:132px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .logo-title{
+    font-size:64px;
+    color:#fff7ee;
+    text-shadow: 0 4px 24px rgba(74,42,30,0.35);
+    letter-spacing:1px;
+    line-height:1;
+  }
+  .logo-sub{
+    font-family:'Manrope',sans-serif;
+    font-weight:700;
+    letter-spacing:6px;
+    font-size:13px;
+    color:#fff3e4;
+    text-transform:uppercase;
+    opacity:0.92;
+  }
+  .landing-bottom{width:100%; padding-bottom:36px; display:flex; flex-direction:column; align-items:center; gap:14px;}
+  .btn{
+    border:none; cursor:pointer;
+    font-family:'Manrope',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    border-radius:999px;
+    padding:16px 30px;
+    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{
+    background: linear-gradient(135deg, #fff7ee, #ffe9d2);
+    color: var(--coral-2);
+    box-shadow: 0 12px 28px -10px rgba(50,20,10,0.5);
+    width:min(320px,80vw);
+  }
+  .btn-ghost{
+    background: rgba(255,255,255,0.14);
+    color:#fff3e4;
+    border:1.5px solid rgba(255,247,238,0.55);
+    width:min(320px,80vw);
+  }
+  .btn-secondary{
+    background: var(--card);
+    color: var(--accent);
+    border: 1.5px solid var(--card-border);
+    width:100%;
+  }
+  .btn-text{
+    background:none;
+    color: var(--ink-soft);
+    font-weight:600;
+    font-size:14px;
+    text-decoration:underline;
+    padding:8px;
+  }
+  .btn-disabled{opacity:0.5; pointer-events:none;}
+  .landing-note{color:#fff3e4; opacity:0.85; font-size:12.5px; max-width:280px; margin-top:2px;}
+
+  /* ---------- generic ---------- */
+  .card{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding:22px 20px;
+  }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 4px 8px;
+  }
+  .backbtn{
+    background:rgba(255,255,255,0.5);
+    border:1px solid var(--card-border);
+    color:var(--ink);
+    width:36px;height:36px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer; font-size:16px;
+  }
+  .pill{
+    background: rgba(255,255,255,0.55);
+    border:1px solid var(--card-border);
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+  }
+  input[type=text], textarea{
+    width:100%;
+    font-family:'Manrope',sans-serif;
+    background: var(--cream-2);
+    border:1.5px solid var(--card-border);
+    border-radius:14px;
+    padding:13px 14px;
+    font-size:15px;
+    color:var(--ink);
+    resize:vertical;
+    outline:none;
+  }
+  input[type=text]:focus, textarea:focus{border-color:var(--accent);}
+  label{font-size:13px; font-weight:700; color:var(--ink-soft); display:block; margin:14px 0 6px;}
+  label:first-child{margin-top:0;}
+
+  /* ---------- setup / lobby ---------- */
+  #screen-setup .card, #screen-lobby .card{margin-top:6px;}
+  .mode-choice{display:flex; flex-direction:column; gap:12px; margin-top:18px;}
+  .mode-card{
+    background:var(--card); border:1.5px solid var(--card-border); border-radius:18px;
+    padding:16px 16px; text-align:left; cursor:pointer; display:flex; gap:14px; align-items:center;
+  }
+  .mode-card:active{transform:scale(0.98);}
+  .mode-emoji{font-size:26px;}
+  .mode-title{font-weight:800; font-size:15px; margin-bottom:2px;}
+  .mode-desc{font-size:12.5px; color:var(--ink-soft); line-height:1.4;}
+  .code-display{
+    font-family:'Playfair Display',serif;
+    font-size:44px; letter-spacing:10px; text-align:center;
+    color:var(--accent); font-weight:700; margin:18px 0 6px;
+  }
+  .waiting-dots span{animation: blink 1.4s infinite; }
+  .waiting-dots span:nth-child(2){animation-delay:.2s;}
+  .waiting-dots span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.25} 40%{opacity:1}}
+
+  /* ---------- game header ---------- */
+  .game-header{padding:14px 4px 4px;}
+  .level-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .level-label{font-size:12px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-soft);}
+  .level-name{font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--accent);}
+  .progress-track{height:7px; background:rgba(0,0,0,0.08); border-radius:99px; overflow:hidden;}
+  .progress-fill{height:100%; background:linear-gradient(90deg,var(--gold),var(--coral)); border-radius:99px; transition:width .4s ease;}
+  .scores-row{display:flex; gap:8px; margin-top:12px;}
+  .score-chip{flex:1; background:var(--card); border:1px solid var(--card-border); border-radius:14px; padding:8px 12px; display:flex; align-items:center; gap:8px;}
+  .score-chip .name{font-weight:700; font-size:12.5px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .score-chip .flames{font-size:12px; font-weight:800; color:var(--coral-2);}
+
+  /* ---------- question card ---------- */
+  .qwrap{flex:1; display:flex; flex-direction:column; margin-top:10px;}
+  .badge-row{display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;}
+  .badge{font-size:11px; font-weight:800; padding:4px 10px; border-radius:99px; letter-spacing:.3px;}
+  .badge-compare{background:#efd9c9; color:var(--coral-2);}
+  .badge-wild{background:#f6dfae; color:#8a5a12;}
+  .badge-choice{background:#e4dbe8; color:var(--plum);}
+  .qcard{background:var(--card); border:1px solid var(--card-border); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px 20px; margin-bottom:16px;}
+  .qtext{font-family:'Playfair Display',serif; font-size:21px; line-height:1.36; font-weight:600; color:var(--ink);}
+  .choice-grid{display:flex; flex-direction:column; gap:10px; margin-top:16px;}
+  .choice-opt{
+    text-align:left; padding:13px 14px; border-radius:14px; border:1.5px solid var(--card-border);
+    background:var(--cream-2); font-weight:600; font-size:14.5px; cursor:pointer; color:var(--ink);
+  }
+  .choice-opt.picked{border-color:var(--accent); background:#fbe4d3; color:var(--coral-2);}
+
+  .panes{display:flex; flex-direction:column; gap:14px;}
+  .pane{background:var(--card); border:1.5px solid var(--card-border); border-radius:18px; padding:16px;}
+  .pane-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .pane-name{font-weight:800; font-size:13px; color:var(--ink-soft);}
+  .pane-locked{
+    min-height:64px; display:flex; align-items:center; justify-content:center; text-align:center;
+    color:var(--ink-soft); font-size:13px; font-weight:600; background:repeating-linear-gradient(135deg, rgba(0,0,0,0.03) 0 10px, transparent 10px 20px); border-radius:10px; padding:10px;
+  }
+  .pane-answer{font-size:14.5px; line-height:1.5; color:var(--ink); white-space:pre-wrap;}
+  .pane-skipped{font-size:13px; color:var(--ink-soft); font-style:italic;}
+  .row-actions{display:flex; gap:10px; margin-top:14px;}
+  .row-actions .btn{flex:1;}
+  .followup{
+    margin-top:14px; padding:14px 16px; border-radius:16px;
+    background:linear-gradient(135deg,#fdeee0,#f7e0e8);
+    font-size:13.5px; color:var(--brown); font-weight:600; line-height:1.5;
+  }
+  .footer-nav{padding:14px 4px 4px; display:flex; gap:10px;}
+  .footer-nav .btn{flex:1;}
+
+  .toast{
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+    background:var(--brown-deep); color:#fff3e4; padding:10px 18px; border-radius:99px;
+    font-size:13px; font-weight:700; box-shadow:0 10px 24px rgba(0,0,0,0.3);
+    opacity:0; pointer-events:none; transition:opacity .25s ease, bottom .25s ease; z-index:50;
+    max-width:88%; text-align:center;
+  }
+  .toast.show{opacity:1; bottom:36px;}
+
+  .interlevel{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:16px;}
+  .interlevel .big-emoji{font-size:54px;}
+  .interlevel h2{font-size:26px;}
+  .interlevel p{color:var(--ink-soft); font-size:14.5px; max-width:320px; line-height:1.5;}
+
+  .final-block{margin-bottom:18px;}
+  .final-block h3{font-size:17px; margin-bottom:8px; color:var(--accent);}
+
+  .summary-stats{display:flex; gap:12px; margin:18px 0;}
+  .stat-card{flex:1; background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:16px 10px; text-align:center;}
+  .stat-num{font-family:'Playfair Display',serif; font-size:30px; color:var(--accent); font-weight:700;}
+  .stat-label{font-size:11.5px; color:var(--ink-soft); font-weight:700; margin-top:2px;}
+
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15); border-radius:99px;}
+
+  /* доп. правки под Telegram safe-area */
+  body{ padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ======= LANDING ======= -->
+  <section id="screen-landing" class="screen active">
+    <div class="landing-top">
+      <div class="logo-mark">
+        <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="60" cy="62" r="16" fill="#fff3e0" opacity="0.95"/>
+          <path d="M14 30 C 30 26, 42 34, 52 50 L 58 60" stroke="#3c2620" stroke-width="7" stroke-linecap="round" fill="none"/>
+          <path d="M106 92 C 90 96, 78 88, 68 72 L 62 62" stroke="#3c2620" stroke-width="7" stroke-linecap="round" fill="none"/>
+          <path d="M52 50 L 58 60" stroke="#3c2620" stroke-width="7" stroke-linecap="round"/>
+          <path d="M68 72 L 62 62" stroke="#3c2620" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-title">Ближе</div>
+        <div class="logo-sub" style="margin-top:10px;">настоящие отношения</div>
+      </div>
+    </div>
+    <div class="landing-bottom">
+      <button class="btn btn-primary" onclick="goTo('about')">Начать игру</button>
+      <button class="btn btn-ghost" id="installBtn" style="display:none;" onclick="installApp()">📲 Установить на телефон</button>
+      <div class="landing-note">Игра для двоих — на пути к большей близости и доверию. Все вопросы — по желанию, всегда можно пропустить.</div>
+    </div>
+  </section>
+
+  <!-- ======= ABOUT ======= -->
+  <section id="screen-about" class="screen">
+    <div class="topbar">
+      <div class="backbtn" onclick="goTo('landing')">←</div>
+      <div class="pill">О игре</div>
+    </div>
+    <div style="text-align:center; margin:6px 0 22px;">
+      <div style="font-size:40px;">💞</div>
+      <h2 style="font-size:26px; margin-top:8px;">О чём эта игра</h2>
+    </div>
+    <div class="card final-block">
+      <h3 style="margin-top:0;">🌤️ В чём суть</h3>
+      <p style="color:var(--ink);font-size:14.5px;line-height:1.55;margin:0;">
+        «Ближе» — это игра-диалог для пары. Вы сами отвечаете на вопросы — от лёгких до личных и откровенных —
+        и постепенно открываетесь друг другу. Никаких тестов и «правильных» ответов — только честный разговор
+        в комфортном темпе.
+      </p>
+    </div>
+    <div class="card final-block" style="margin-top:14px;">
+      <h3 style="margin-top:0;">🧭 Как это устроено</h3>
+      <p style="color:var(--ink);font-size:14.5px;line-height:1.55;margin:0 0 10px;">
+        8 уровней — от простых вопросов о мелочах до тем близости, фантазий и того, что хочется попробовать
+        вместе. Переход происходит постепенно, без резких скачков.
+      </p>
+      <p style="color:var(--ink);font-size:14.5px;line-height:1.55;margin:0;">
+        Часть вопросов вы оба отвечаете одновременно, не видя ответ партнёра заранее. Каждый пройденный вопрос
+        приносит жетоны 🔥, а в конце — «секретный вопрос» и мини-сессия с психологом.
+      </p>
+    </div>
+    <div class="card final-block" style="margin-top:14px;">
+      <h3 style="margin-top:0;">🌱 Какая от неё польза</h3>
+      <ul style="margin:0; padding-left:20px; color:var(--ink); font-size:14.5px; line-height:1.7;">
+        <li>Помогает лучше узнать вкусы, границы и желания друг друга</li>
+        <li>Создаёт безопасное пространство для неловких тем</li>
+        <li>Учит говорить о потребностях прямо, но бережно</li>
+        <li>Укрепляет доверие через маленькие открытия</li>
+        <li>Превращает разговор о чувствах в тёплую игру</li>
+      </ul>
+    </div>
+    <div class="card final-block" style="margin-top:14px; background:linear-gradient(135deg,#fdeee0,#f7e0e8); border:none;">
+      <h3 style="margin-top:0;">🤝 Важно</h3>
+      <p style="color:var(--brown);font-size:14px;line-height:1.55;margin:0;">
+        Любой вопрос можно пропустить без объяснений. Здесь нет оценок. Игра — для совершеннолетних партнёров,
+        строится на взаимном согласии и уважении к границам друг друга.
+      </p>
+    </div>
+    <div style="margin-top:20px; margin-bottom:8px;">
+      <button class="btn btn-primary" style="color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2)); width:100%;" onclick="goTo('setup')">Начать игру</button>
+    </div>
+  </section>
+
+  <!-- ======= SETUP (mode choice) ======= -->
+  <section id="screen-setup" class="screen">
+    <div class="topbar">
+      <div class="backbtn" onclick="goTo('about')">←</div>
+      <div class="pill">Шаг 1 из 2</div>
+    </div>
+    <h2 style="font-size:24px; margin-top:6px;">Как будете играть?</h2>
+    <p style="color:var(--ink-soft); font-size:14px; margin-top:6px;">Можно быть рядом или в разных местах.</p>
+    <div class="mode-choice">
+      <div class="mode-card" onclick="chooseMode('online')">
+        <div class="mode-emoji">📶</div>
+        <div>
+          <div class="mode-title">Играть удалённо</div>
+          <div class="mode-desc">Каждый — на своём телефоне. Один создаёт комнату и делится кодом, другой присоединяется.</div>
+        </div>
+      </div>
+      <div class="mode-card" onclick="chooseMode('local')">
+        <div class="mode-emoji">🛋️</div>
+        <div>
+          <div class="mode-title">Играть на одном экране</div>
+          <div class="mode-desc">Вы рядом — отвечаете по очереди на одном устройстве, ответы скрыты до открытия.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= ONLINE: create/join ======= -->
+  <section id="screen-online" class="screen">
+    <div class="topbar">
+      <div class="backbtn" onclick="goTo('setup')">←</div>
+      <div class="pill">Шаг 2 из 2</div>
+    </div>
+    <h2 style="font-size:22px; margin-top:6px;">Ваше имя</h2>
+    <div class="card" style="margin-top:14px;">
+      <label>Как вас называть в игре?</label>
+      <input type="text" id="inputName" placeholder="Например, Аня" maxlength="24">
+      <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
+        <button class="btn btn-secondary" onclick="createRoom()">Создать комнату</button>
+        <div style="text-align:center; color:var(--ink-soft); font-size:12.5px; font-weight:700;">— или —</div>
+        <input type="text" id="inputCode" placeholder="Введите код комнаты" maxlength="5" style="text-transform:uppercase; text-align:center; letter-spacing:4px; font-weight:800;">
+        <button class="btn btn-primary" style="color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2)); width:100%;" onclick="joinRoom()">Присоединиться</button>
+      </div>
+      <div id="onlineError" style="color:#a33; font-size:13px; margin-top:10px; font-weight:600;"></div>
+    </div>
+  </section>
+
+  <!-- ======= LOBBY ======= -->
+  <section id="screen-lobby" class="screen">
+    <div class="topbar">
+      <div class="backbtn" onclick="goTo('setup')">←</div>
+      <div class="pill">Комната</div>
+    </div>
+    <div class="card" style="margin-top:18px; text-align:center;">
+      <div style="color:var(--ink-soft); font-size:13px; font-weight:700;">Код вашей комнаты</div>
+      <div class="code-display" id="lobbyCode">— — — —</div>
+      <div style="color:var(--ink-soft); font-size:13px;">Отправьте этот код партнёру, чтобы он присоединился</div>
+      <div id="lobbyStatus" style="margin-top:22px; font-weight:700; color:var(--accent);">
+        Ждём партнёра<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span>
+      </div>
+      <button class="btn btn-primary" id="lobbyStartBtn" style="margin-top:18px; color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2)); width:100%; display:none;" onclick="beginGame()">Начать игру</button>
+    </div>
+  </section>
+
+  <!-- ======= LOCAL setup ======= -->
+  <section id="screen-localsetup" class="screen">
+    <div class="topbar">
+      <div class="backbtn" onclick="goTo('setup')">←</div>
+      <div class="pill">Шаг 2 из 2</div>
+    </div>
+    <h2 style="font-size:22px; margin-top:6px;">Имена игроков</h2>
+    <div class="card" style="margin-top:14px;">
+      <label>Игрок 1</label>
+      <input type="text" id="localName1" placeholder="Имя" maxlength="24">
+      <label>Игрок 2</label>
+      <input type="text" id="localName2" placeholder="Имя" maxlength="24">
+      <button class="btn btn-primary" style="margin-top:20px; color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2)); width:100%;" onclick="startLocal()">Начать игру</button>
+    </div>
+  </section>
+
+  <!-- ======= INTERLEVEL ======= -->
+  <section id="screen-interlevel" class="screen">
+    <div class="interlevel">
+      <div class="big-emoji" id="interEmoji">🌇</div>
+      <h2 id="interTitle">Уровень пройден!</h2>
+      <p id="interText">Переходим глубже...</p>
+      <button class="btn btn-primary" style="color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2));" onclick="continueAfterInterlevel()">Продолжить</button>
+    </div>
+  </section>
+
+  <!-- ======= GAME ======= -->
+  <section id="screen-game" class="screen">
+    <div class="game-header">
+      <div class="level-row">
+        <div>
+          <div class="level-label" id="hLevelLabel">Уровень 1</div>
+          <div class="level-name" id="hLevelName">Узнай меня</div>
+        </div>
+        <div class="pill" id="hQnum">1/6</div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:4%;"></div></div>
+      <div class="scores-row">
+        <div class="score-chip"><span class="flames" id="scoreA">🔥0</span><span class="name" id="nameA">Игрок 1</span></div>
+        <div class="score-chip"><span class="flames" id="scoreB">🔥0</span><span class="name" id="nameB">Игрок 2</span></div>
+      </div>
+    </div>
+    <div class="qwrap">
+      <div class="badge-row" id="badgeRow"></div>
+      <div class="qcard">
+        <div class="qtext" id="qtext">Вопрос</div>
+        <div id="choiceArea"></div>
+      </div>
+      <div class="panes" id="panesArea"></div>
+      <div id="followupArea"></div>
+    </div>
+    <div class="footer-nav">
+      <button class="btn btn-secondary" id="skipBtn" onclick="skipQuestion()">Пропустить</button>
+      <button class="btn btn-primary" id="nextBtn" style="color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2)); flex:1.4;" onclick="goNextQuestion()" disabled>Далее</button>
+    </div>
+  </section>
+
+  <!-- ======= FINAL ROUND ======= -->
+  <section id="screen-final" class="screen">
+    <div class="topbar"><div class="pill">Финальный раунд</div></div>
+    <h2 style="font-size:24px; margin-top:6px;">Секретный вопрос 💌</h2>
+    <p style="color:var(--ink-soft); font-size:14px; margin-top:4px;">Придумайте один вопрос, который вы давно хотели задать партнёру, но не решались.</p>
+    <div class="card" style="margin-top:16px;">
+      <label id="secretLabelMe">Ваш секретный вопрос партнёру</label>
+      <textarea id="secretInput" rows="3" placeholder="Например: о чём ты думаешь, когда..."></textarea>
+      <button class="btn btn-primary" id="secretSubmitBtn" style="margin-top:14px; color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2)); width:100%;" onclick="submitSecret()">Отправить вопрос</button>
+      <div id="secretStatus" style="margin-top:10px; font-size:12.5px; color:var(--ink-soft); font-weight:700; text-align:center;"></div>
+    </div>
+    <div class="panes" id="secretPanes" style="margin-top:16px;"></div>
+    <div class="footer-nav">
+      <button class="btn btn-primary" id="finalNextBtn" style="color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2)); width:100%;" disabled onclick="goToSession()">К мини-сессии</button>
+    </div>
+  </section>
+
+  <!-- ======= MINI SESSION ======= -->
+  <section id="screen-session" class="screen">
+    <div class="topbar"><div class="pill">Мини-сессия</div></div>
+    <div id="sessionLoading" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center;">
+      <div style="font-size:44px;">🛋️</div>
+      <h2 style="font-size:22px;">Обдумываем вашу пару...</h2>
+      <p style="color:var(--ink-soft); font-size:14px; max-width:280px;">Собираем ваши ответы и готовим мини-сессию с рекомендациями</p>
+    </div>
+    <div id="sessionContent" style="display:none;">
+      <div class="card final-block" style="text-align:center; background:linear-gradient(135deg,#fdeee0,#f7e0e8); border:none;">
+        <div style="font-size:34px;">🕊️</div>
+        <p id="sessOpening" style="color:var(--brown); font-size:15px; line-height:1.6; margin:10px 0 0; font-weight:600;"></p>
+      </div>
+      <div class="card final-block" style="margin-top:14px;">
+        <h3 style="margin-top:0;">💚 Что у вас уже хорошо получается</h3>
+        <ul id="sessStrengths" style="margin:0; padding-left:20px; color:var(--ink); font-size:14.5px; line-height:1.7;"></ul>
+      </div>
+      <div class="card final-block" style="margin-top:14px;">
+        <h3 style="margin-top:0;">🌾 На что обратить внимание</h3>
+        <ul id="sessGrow" style="margin:0; padding-left:20px; color:var(--ink); font-size:14.5px; line-height:1.7;"></ul>
+      </div>
+      <div class="card final-block" style="margin-top:14px;">
+        <h3 style="margin-top:0;">🎯 Что попробовать в ближайшее время</h3>
+        <ul id="sessTry" style="margin:0; padding-left:20px; color:var(--ink); font-size:14.5px; line-height:1.7;"></ul>
+      </div>
+      <div class="card final-block" style="margin-top:14px;">
+        <h3 style="margin-top:0;">🗣️ Темы для разговора вживую</h3>
+        <ul id="sessStarters" style="margin:0; padding-left:20px; color:var(--ink); font-size:14.5px; line-height:1.7;"></ul>
+      </div>
+      <div class="card final-block" style="margin-top:14px; text-align:center;">
+        <p id="sessClosing" style="color:var(--ink); font-size:14.5px; line-height:1.6; margin:0; font-style:italic;"></p>
+      </div>
+      <div style="margin:18px 0 8px;">
+        <button class="btn btn-primary" style="color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2)); width:100%;" onclick="goTo('summary')">К итогам</button>
+      </div>
+    </div>
+    <div id="sessionError" style="display:none; text-align:center; padding:20px;">
+      <p style="color:var(--ink-soft); font-size:14px;">Не получилось подготовить мини-сессию. Но вы уже отлично поговорили друг с другом — это и есть главное 💞</p>
+      <button class="btn btn-primary" style="color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2)); width:100%; margin-top:12px;" onclick="goTo('summary')">К итогам</button>
+    </div>
+  </section>
+
+  <!-- ======= SUMMARY ======= -->
+  <section id="screen-summary" class="screen">
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:8px;">
+      <div style="font-size:50px;">💞</div>
+      <h2 style="font-size:26px;">Вы стали ближе</h2>
+      <p style="color:var(--ink-soft); font-size:14.5px; max-width:320px;">Спасибо, что были честны и открыты друг с другом. Это и есть настоящая близость.</p>
+      <div class="summary-stats" style="width:100%; max-width:340px;">
+        <div class="stat-card"><div class="stat-num" id="sumA">0</div><div class="stat-label" id="sumALabel">ИГРОК 1</div></div>
+        <div class="stat-card"><div class="stat-num" id="sumB">0</div><div class="stat-label" id="sumBLabel">ИГРОК 2</div></div>
+      </div>
+      <button class="btn btn-primary" style="color:#fff; background:linear-gradient(135deg,var(--coral),var(--coral-2)); margin-top:10px;" onclick="location.reload()">Сыграть снова</button>
+    </div>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ PWA: service worker + установка ============ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('installBtn');
+  if(btn) btn.style.display = 'block';
+});
+function installApp(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.finally(()=>{
+    deferredInstallPrompt = null;
+    const btn = document.getElementById('installBtn');
+    if(btn) btn.style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', ()=>{
+  const btn = document.getElementById('installBtn');
+  if(btn) btn.style.display = 'none';
+});
+
+function tgUserName(){ return ''; } // оставлено как заглушка — Telegram больше не используется
+
+/* ============ API BASE ============ */
+const API_BASE = (function(){
+  // По умолчанию бэкенд на том же хосте. Если фронт лежит отдельно —
+  // замените строку ниже на полный адрес вашего backend, например:
+  // return 'https://your-backend.up.railway.app';
+  return '';
+})();
+
+async function api(path, opts){
+  const res = await fetch(API_BASE + path, Object.assign({
+    headers: {'Content-Type':'application/json'}
+  }, opts));
+  let data = null;
+  try{ data = await res.json(); }catch(e){}
+  if(!res.ok){
+    const err = new Error((data && data.error) || ('http_'+res.status));
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+/* =========================================================
+   ДАННЫЕ ИГРЫ
+========================================================= */
+const LEVELS = [
+
+  {id:1, name:"Узнай меня", emoji:"🌤️", weight:1, intro:"Начнём с лёгкого — просто чтобы настроиться друг на друга."},
+  {id:2, name:"Что мне нравится", emoji:"🍋", weight:1, intro:"Немного о вкусах, привычках и мелочах, которые вас радуют."},
+  {id:3, name:"Романтика", emoji:"🌹", weight:2, intro:"Поговорим о том, как вы чувствуете любовь и заботу."},
+  {id:4, name:"Границы и комфорт", emoji:"🫶", weight:2, intro:"Важная остановка: что для каждого комфортно, а что — нет."},
+  {id:5, name:"Неожиданные признания", emoji:"🎈", weight:2, intro:"Время для игривых и неожиданных откровений."},
+  {id:6, name:"Скрытые желания", emoji:"🕯️", weight:3, intro:"Идём чуть глубже — к тому, о чём редко говорят вслух."},
+  {id:7, name:"Фантазии", emoji:"✨", weight:3, intro:"Пространство для мечтаний — без осуждения, только любопытство."},
+  {id:8, name:"Что попробовать вместе", emoji:"🌙", weight:4, intro:"И, наконец, — что бы вы хотели открыть вместе."},
+];
+
+const GENERIC_FOLLOWUPS = [
+
+  "А что в этом ответе тебя самого удивило?",
+  "Как думаешь, почему это важно именно для тебя?",
+  "Хочешь что-то добавить или уточнить?",
+  "А как, по-твоему, ответит партнёр?",
+  "Когда ты в последний раз об этом думал(а)?",
+  "Это связано с каким-то воспоминанием?",
+];
+
+const QUESTIONS = [
+
+  // ---------- L1: Узнай меня ----------
+  {level:1, type:'text', q:"Опиши идеальное для тебя воскресенье — от утра до вечера."},
+  {level:1, type:'choice', q:"Если бы у вас был свободный день вдвоём без забот, что бы выбрал(а)?", options:["Остаться дома и ничего не делать","Уехать куда-то без плана","Активность на весь день","Тихий вечер вдвоём с едой навынос"], compare:true},
+  {level:1, type:'text', q:"Какая мелочь может испортить тебе настроение — а какая, наоборот, мгновенно его поднять?"},
+  {level:1, type:'text', q:"Что из детства до сих пор на тебя влияет — привычка, страх или радость?"},
+  {level:1, type:'choice', q:"Ты скорее сова или жаворонок?", options:["Сова","Жаворонок","Где-то посередине","Зависит от настроения"]},
+  {level:1, type:'text', q:"Опиши себя тремя словами, которые обычно не приходят в голову другим людям."},
+  {level:1, type:'text', q:"Что заставляет тебя чувствовать себя услышанным(ой)?", wild:true},
+
+  // ---------- L2: Что мне нравится ----------
+  {level:2, type:'text', q:"Какой комплимент ты готов(а) слышать бесконечно?"},
+  {level:2, type:'choice', q:"Что для тебя более привлекательно в партнёре?", options:["Уверенность","Забота","Чувство юмора","Загадочность"], compare:true},
+  {level:2, type:'text', q:"Опиши место (реальное или выдуманное), где ты чувствуешь себя абсолютно свободно."},
+  {level:2, type:'text', q:"Какая вещь — запах, звук, текстура — мгновенно тебя расслабляет?"},
+  {level:2, type:'choice', q:"Что тебе приятнее получать?", options:["Слова поддержки","Объятия","Маленькие подарки","Время вместе без телефонов"], compare:true},
+  {level:2, type:'text', q:"Что в человеке ты замечаешь в первую очередь — и часто ли ошибаешься в этом первом впечатлении?"},
+  {level:2, type:'text', q:"Какая музыка или фильм создают у тебя нужное настроение, когда хочется близости с кем-то?", wild:true},
+
+  // ---------- L3: Романтика ----------
+  {level:3, type:'text', q:"Как ты понимаешь, что тебя любят — не на словах, а по ощущениям?"},
+  {level:3, type:'choice', q:"Какой жест для тебя самый романтичный?", options:["Неожиданная записка или сообщение","Ужин, приготовленный дома","Долгая прогулка вдвоём","Забота в мелочах каждый день"], compare:true},
+  {level:3, type:'text', q:"Опиши свидание мечты — необязательно реалистичное."},
+  {level:3, type:'text', q:"Что, по-твоему, делает пару по-настоящему близкой — помимо влюблённости?"},
+  {level:3, type:'text', q:"Есть ли момент из наших отношений, который ты бы хотел(а) пережить снова?"},
+  {level:3, type:'choice', q:"Что для тебя важнее в романтике?", options:["Спонтанность","Ритуалы и традиции","Разговоры допоздна","Тихое присутствие рядом"], compare:true},
+  {level:3, type:'text', q:"Какие слова тебе сложно произносить вслух, даже если ты их чувствуешь?", wild:true},
+
+  // ---------- L4: Границы и комфорт ----------
+  {level:4, type:'text', q:"В какие моменты тебе особенно нужно личное пространство — и как лучше об этом попросить?"},
+  {level:4, type:'text', q:"Есть ли тема, которую тебе трудно обсуждать, но ты бы хотел(а) научиться это делать спокойнее?"},
+  {level:4, type:'choice', q:"Когда тебе некомфортно, что помогает больше всего?", options:["Побыть одному(ой)","Проговорить всё сразу","Просто обняться, без слов","Немного времени, потом разговор"], compare:true},
+  {level:4, type:'text', q:"Что тебе важно услышать от партнёра, прежде чем начать разговор на чувствительную тему?"},
+  {level:4, type:'text', q:"Есть ли что-то, о чём ты хотел(а) бы, чтобы я спрашивал(а) разрешения чаще?"},
+  {level:4, type:'text', q:"Как ты понимаешь, что твои границы услышаны и уважают, а не просто терпят?"},
+  {level:4, type:'text', q:"Если бы у тебя была кнопка «стоп» на любой разговор без объяснений — как бы ты хотел(а), чтобы она работала между нами?", wild:true},
+
+  // ---------- L5: Неожиданные признания ----------
+  {level:5, type:'text', q:"Расскажи о привычке, о которой мало кто знает."},
+  {level:5, type:'choice', q:"Что из этого больше похоже на тебя тайно?", options:["Пересматриваю одно и то же по кругу","Разговариваю сам(а) с собой","Придумываю диалоги наперёд","Проверяю телефон партнёра из любопытства, не признаваясь"], compare:true},
+  {level:5, type:'text', q:"Какой была твоя самая нелепая влюблённость — в кого угодно, необязательно в человека?"},
+  {level:5, type:'text', q:"Есть что-то, чем ты втайне гордишься, но никогда не говорил(а) вслух?"},
+  {level:5, type:'text', q:"Что бы ты сделал(а), если бы точно знал(а), что никто не узнает и не осудит?", wild:true},
+  {level:5, type:'text', q:"Какую свою черту ты скрываешь в начале отношений, а показываешь только когда доверяешь?"},
+  {level:5, type:'choice', q:"Признайся: что из этого случалось с тобой?", options:["Влюблялся(ась) с первого взгляда","Придумывал(а) несуществующий повод для сообщения","Ревновал(а) без причины","Плакал(а) от счастья"], compare:true},
+
+  // ---------- L6: Скрытые желания ----------
+  {level:6, type:'text', q:"О чём ты мечтаешь, но пока никому не рассказывал(а) полностью?"},
+  {level:6, type:'text', q:"Что бы ты хотел(а) получать чаще в наших отношениях, но стесняешься попросить прямо?"},
+  {level:6, type:'choice', q:"Что тебе ближе в близости — эмоциональной и физической?", options:["Медленно, с разговорами","Спонтанно и неожиданно","С юмором и лёгкостью","Через нежность и тишину"], compare:true},
+  {level:6, type:'text', q:"Какое внимание партнёра заставляет тебя чувствовать себя по-настоящему желанным(ой)?"},
+  {level:6, type:'text', q:"Есть ли желание, которое кажется тебе слишком личным, чтобы озвучить его вслух даже сейчас?", wild:true},
+  {level:6, type:'text', q:"Что тебе хотелось бы, чтобы я замечал(а) в тебе чаще, но я, возможно, упускаю?"},
+  {level:6, type:'text', q:"Какая форма заботы — не обязательно романтичная — заставляет тебя расслабиться сильнее всего?"},
+
+  // ---------- L7: Фантазии ----------
+  {level:7, type:'text', q:"А что если бы у вас была одна ночь без правил и ожиданий — как бы она выглядела?"},
+  {level:7, type:'text', q:"Есть ли сценарий или атмосфера, о которой ты фантазируешь, но никогда не предлагал(а) вслух?"},
+  {level:7, type:'choice', q:"Какая атмосфера тебе ближе для интимного вечера?", options:["Свечи, музыка, неторопливость","Спонтанность и лёгкий риск","Игра, роли, немного шалости","Тишина и полное доверие"], compare:true},
+  {level:7, type:'text', q:"Что в физической близости для тебя значит больше — новизна или узнаваемость и предсказуемость?"},
+  {level:7, type:'text', q:"Есть ли фантазия, которую тебе хотелось бы просто обсудить вслух — не обязательно воплощать?", wild:true},
+  {level:7, type:'text', q:"Что тебя больше всего возбуждает не физически, а эмоционально — какая ситуация, слова, взгляд?"},
+  {level:7, type:'text', q:"Если бы ты мог(ла) написать один сценарий вечера вдвоём без ограничений — с чего бы он начинался?"},
+
+  // ---------- L8: Что попробовать вместе ----------
+  {level:8, type:'text', q:"Есть ли место, куда ты давно хочешь съездить вдвоём, но пока не предлагал(а)?"},
+  {level:8, type:'text', q:"Какую новую активность — необязательно интимную — тебе хотелось бы попробовать вместе в этом году?"},
+  {level:8, type:'choice', q:"Что из этого звучит заманчивее для совместного эксперимента?", options:["Новый вид массажа друг для друга","Ролевая игра или переодевание","Романтический уикенд без телефонов","Откровенный разговор при свечах, без тем-табу"], compare:true},
+  {level:8, type:'text', q:"Что бы тебе хотелось, чтобы мы делали чаще — из простого, что мы уже умеем?"},
+  {level:8, type:'text', q:"Есть ли граница, за которую тебе интересно заглянуть вместе, но аккуратно и постепенно?", wild:true},
+  {level:8, type:'text', q:"Как бы выглядел один вечер, спланированный только для того, чтобы узнать друг друга ещё лучше?"},
+  {level:8, type:'text', q:"Если бы у нас была «карта желаний» на год вперёд — что бы ты вписал(а) туда первым?"},
+];
+
+/* =========================================================
+   СОСТОЯНИЕ
+========================================================= */
+let mode = null;          // 'online' | 'local'
+let role = null;          // 'A' | 'B'
+let myName = "", partnerName = "";
+let roomCode = null;
+let pollTimer = null;
+let roomState = { A:{name:""}, B:{name:""}, currentIndex:0, answers:{}, secretQ:{A:'',B:''} };
+let questionOrder = [];
+let currentIdx = 0;
+let myCommitted = false;
+let secretSubmitted = {A:false, B:false};
+let secretText = {A:"", B:""};
+let pendingChoice = null;
+let sessionPollTimer = null;
+
+function buildQuestionOrder(){
+  questionOrder = QUESTIONS.map((q,i)=>({...q, qid:'q'+i}));
+}
+buildQuestionOrder();
+
+/* =========================================================
+   НАВИГАЦИЯ
+========================================================= */
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(id==='summary') fillSummary();
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* =========================================================
+   MODE CHOICE
+========================================================= */
+function chooseMode(m){
+  mode = m;
+  const prefill = tgUserName();
+  if(m==='online'){
+    goTo('online');
+    if(prefill) document.getElementById('inputName').value = prefill;
+  } else {
+    goTo('localsetup');
+  }
+}
+
+/* =========================================================
+   LOCAL MODE
+========================================================= */
+async function startLocal(){
+  const n1 = document.getElementById('localName1').value.trim() || 'Игрок 1';
+  const n2 = document.getElementById('localName2').value.trim() || 'Игрок 2';
+  try{
+    const created = await api('/api/rooms', {method:'POST', body: JSON.stringify({name:n1, mode:'local'})});
+    roomCode = created.code;
+    role = 'A';
+    await api('/api/rooms/'+roomCode+'/start-local', {method:'POST', body: JSON.stringify({nameA:n1, nameB:n2})});
+    const st = await api('/api/rooms/'+roomCode);
+    applyRoomState(st.room);
+    myName = n1; partnerName = n2;
+    beginGame();
+  }catch(e){
+    showToast('Не удалось создать локальную игру. Проверьте соединение с сервером.');
+  }
+}
+
+/* =========================================================
+   ONLINE MODE
+========================================================= */
+async function createRoom(){
+  const name = document.getElementById('inputName').value.trim();
+  if(!name){ showToast('Введите имя'); return; }
+  myName = name; role = 'A';
+  try{
+    const created = await api('/api/rooms', {method:'POST', body: JSON.stringify({name, mode:'online'})});
+    roomCode = created.code;
+    applyRoomState(created.room);
+    document.getElementById('lobbyCode').textContent = roomCode.split('').join(' ');
+    goTo('lobby');
+    startPolling();
+  }catch(e){
+    showToast('Не удалось создать комнату. Проверьте соединение с сервером.');
+  }
+}
+
+async function joinRoom(){
+  const name = document.getElementById('inputName').value.trim();
+  const code = document.getElementById('inputCode').value.trim().toUpperCase();
+  const err = document.getElementById('onlineError');
+  err.textContent = '';
+  if(!name){ showToast('Введите имя'); return; }
+  if(!code){ showToast('Введите код комнаты'); return; }
+  myName = name;
+  try{
+    const joined = await api('/api/rooms/'+code+'/join', {method:'POST', body: JSON.stringify({name})});
+    role = joined.role;
+    roomCode = code;
+    applyRoomState(joined.room);
+    document.getElementById('lobbyCode').textContent = roomCode.split('').join(' ');
+    goTo('lobby');
+    startPolling();
+  }catch(e){
+    if(e.message==='room_not_found') err.textContent = 'Комната с таким кодом не найдена.';
+    else if(e.message==='room_full') err.textContent = 'В этой комнате уже два игрока.';
+    else err.textContent = 'Не удалось присоединиться. Проверьте соединение.';
+  }
+}
+
+function applyRoomState(r){
+  if(!r) return;
+  roomState.A.name = (r.A && r.A.name) || roomState.A.name;
+  roomState.B.name = (r.B && r.B.name) || roomState.B.name;
+  roomState.answers = r.answers || roomState.answers;
+  roomState.secretQ = r.secretQ || roomState.secretQ;
+  roomState.sessionReport = r.sessionReport;
+  roomState.sessionStatus = r.sessionStatus;
+  partnerName = role==='A' ? roomState.B.name : roomState.A.name;
+
+  // лобби
+  const lobbyStatus = document.getElementById('lobbyStatus');
+  const startBtn = document.getElementById('lobbyStartBtn');
+  if(document.getElementById('screen-lobby').classList.contains('active')){
+    if(roomState.A.name && roomState.B.name){
+      lobbyStatus.innerHTML = '💞 '+ (role==='A'?roomState.B.name:roomState.A.name) +' присоединился(ась)!';
+      startBtn.style.display = 'block';
+    }
+  }
+
+  // секрет партнёра
+  const partnerRole = role==='A'?'B':'A';
+  if(roomState.secretQ && roomState.secretQ[partnerRole] && !secretSubmitted[partnerRole]){
+    secretText[partnerRole] = roomState.secretQ[partnerRole];
+    secretSubmitted[partnerRole] = true;
+    if(document.getElementById('screen-final').classList.contains('active')){
+      updateSecretUI();
+      renderSecretExchange();
+      checkFinalReady();
+    }
+  }
+
+  // продвижение вопроса (для партнёра, который ещё не нажал "Далее")
+  if(typeof r.currentIndex === 'number' && r.currentIndex !== currentIdx && document.getElementById('screen-game').classList.contains('active')){
+    currentIdx = r.currentIndex;
+    renderQuestion();
+  }
+
+  // подхватываем ответы партнёра в локальный кэш для текущего вопроса
+  const q = questionOrder[currentIdx];
+  if(q && roomState.answers[q.qid]){
+    if(document.getElementById('screen-game').classList.contains('active')){
+      refreshPartnerPaneVisibility(q);
+      updateNextButtonState();
+    }
+  }
+}
+
+function startPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async ()=>{
+    if(!roomCode) return;
+    try{
+      const st = await api('/api/rooms/'+roomCode);
+      applyRoomState(st.room);
+    }catch(e){ /* тихо игнорируем единичные сбои поллинга */ }
+  }, 2200);
+}
+
+/* =========================================================
+   START GAME
+========================================================= */
+function beginGame(){
+  currentIdx = 0;
+  document.getElementById('nameA').textContent = roomState.A.name || 'Игрок 1';
+  document.getElementById('nameB').textContent = roomState.B.name || 'Игрок 2';
+  goTo('game');
+  showLevelIntro(1, ()=>renderQuestion());
+}
+
+/* =========================================================
+   LEVEL INTRO
+========================================================= */
+function showLevelIntro(levelId, cb){
+  const lvl = LEVELS.find(l=>l.id===levelId);
+  document.getElementById('interEmoji').textContent = lvl.emoji;
+  document.getElementById('interTitle').textContent = 'Уровень '+lvl.id+' — «'+lvl.name+'»';
+  document.getElementById('interText').textContent = lvl.intro;
+  window._afterInter = cb;
+  goTo('interlevel');
+}
+function continueAfterInterlevel(){
+  goTo('game');
+  if(window._afterInter) window._afterInter();
+}
+
+/* =========================================================
+   RENDER QUESTION
+========================================================= */
+let lastLevelShown = 0;
+
+function renderQuestion(){
+  if(currentIdx >= questionOrder.length){
+    goTo('final');
+    renderSecretPanes();
+    return;
+  }
+  const q = questionOrder[currentIdx];
+  const lvl = LEVELS.find(l=>l.id===q.level);
+
+  if(lvl.id !== lastLevelShown){
+    lastLevelShown = lvl.id;
+    if(currentIdx !== 0){
+      showLevelIntro(lvl.id, ()=>actuallyRenderQuestion(q, lvl));
+      return;
+    }
+  }
+  actuallyRenderQuestion(q, lvl);
+}
+
+function actuallyRenderQuestion(q, lvl){
+  document.getElementById('hLevelLabel').textContent = 'Уровень '+lvl.id+' из '+LEVELS.length;
+  document.getElementById('hLevelName').textContent = lvl.emoji+' '+lvl.name;
+  document.getElementById('hQnum').textContent = (currentIdx+1)+'/'+questionOrder.length;
+  document.getElementById('progressFill').style.width = Math.round(((currentIdx)/questionOrder.length)*100)+'%';
+  document.getElementById('qtext').textContent = q.q;
+
+  const badgeRow = document.getElementById('badgeRow');
+  badgeRow.innerHTML = '';
+  if(q.compare) badgeRow.innerHTML += '<span class="badge badge-compare">💬 Сравните ответы</span>';
+  if(q.wild) badgeRow.innerHTML += '<span class="badge badge-wild">⚡ Неожиданный вопрос</span>';
+  if(q.type==='choice') badgeRow.innerHTML += '<span class="badge badge-choice">🎯 Выбор</span>';
+
+  pendingChoice = null;
+  const choiceArea = document.getElementById('choiceArea');
+  choiceArea.innerHTML = '';
+  if(q.type==='choice'){
+    const grid = document.createElement('div');
+    grid.className='choice-grid';
+    q.options.forEach(opt=>{
+      const b = document.createElement('button');
+      b.className='choice-opt';
+      b.textContent = opt;
+      b.onclick = ()=>{ pendingChoice = opt; document.querySelectorAll('.choice-opt').forEach(x=>x.classList.remove('picked')); b.classList.add('picked'); };
+      grid.appendChild(b);
+    });
+    choiceArea.appendChild(grid);
+    if(mode==='local'){
+      const hint = document.createElement('div');
+      hint.style.cssText='font-size:12.5px;color:var(--ink-soft);margin-top:10px;font-weight:600;';
+      hint.textContent = 'Выберите вариант и нажмите «Ответить за...» ниже — сначала за одного игрока, потом за другого.';
+      choiceArea.appendChild(hint);
+    }
+  }
+
+  renderPanes(q);
+  renderFollowup(null);
+  myCommitted = false;
+  updateNextButtonState();
+}
+
+function getLocalAnswer(qid, r){
+  return roomState.answers[qid] ? roomState.answers[qid][r] : undefined;
+}
+function setLocalAnswerCache(qid, r, val){
+  if(!roomState.answers[qid]) roomState.answers[qid] = {};
+  roomState.answers[qid][r] = val;
+}
+
+function renderPanes(q){
+  const panesArea = document.getElementById('panesArea');
+  panesArea.innerHTML = '';
+
+  if(mode==='local'){
+    panesArea.innerHTML = buildLocalPanesHTML(q);
+    return;
+  }
+
+  const myAns = getLocalAnswer(q.qid, role);
+
+  const myPane = document.createElement('div');
+  myPane.className = 'pane';
+  myPane.innerHTML = `
+    <div class="pane-head"><div class="pane-name">Вы (${escapeHtml(myName||'')})</div></div>
+    ${ q.type==='text' ? `<textarea id="myAnswerInput" rows="3" placeholder="Напишите ваш ответ...">${myAns && !myAns.skipped ? escapeHtml(myAns.text) : ''}</textarea>` : '' }
+    ${ q.type==='choice' ? `<div style="font-size:13px; color:var(--ink-soft);">Выберите вариант выше и нажмите «Ответить»</div>` : '' }
+    <button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="commitMyAnswer()" id="commitBtn">Ответить</button>
+  `;
+  panesArea.appendChild(myPane);
+
+  const partnerPane = document.createElement('div');
+  partnerPane.className = 'pane';
+  partnerPane.id = 'partnerPane';
+  partnerPane.innerHTML = `
+    <div class="pane-head"><div class="pane-name">${escapeHtml(partnerName||'Партнёр')}</div></div>
+    <div class="pane-locked" id="partnerPaneBody">🔒 Ответьте сами, чтобы увидеть ответ партнёра</div>
+  `;
+  panesArea.appendChild(partnerPane);
+
+  if(myAns){
+    myCommitted = true;
+    const cb = document.getElementById('commitBtn'); if(cb) cb.style.display='none';
+    const ta = document.getElementById('myAnswerInput'); if(ta) ta.disabled = true;
+  }
+  refreshPartnerPaneVisibility(q);
+}
+
+function buildLocalPanesHTML(q){
+  const a = getLocalAnswer(q.qid,'A');
+  const b = getLocalAnswer(q.qid,'B');
+  function paneHtml(who, name, ans){
+    const committed = !!ans;
+    return `<div class="pane">
+      <div class="pane-head"><div class="pane-name">${escapeHtml(name)}</div></div>
+      ${ q.type==='text' ? `<textarea id="local${who}Input" rows="3" placeholder="Ответ ${escapeHtml(name)}..." ${committed?'disabled':''}>${committed && !ans.skipped ? escapeHtml(ans.text): ''}</textarea>` : `<div style="font-size:13px;color:var(--ink-soft);">Выберите вариант в карточке выше от лица ${escapeHtml(name)}</div>` }
+      ${ !committed ? `<button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="commitLocalAnswer('${who}')">Ответить за ${escapeHtml(name)}</button>` : (ans.skipped? `<div class="pane-skipped" style="margin-top:8px;">Пропущено</div>` : `<div class="pane-answer" style="margin-top:8px;">${escapeHtml(ans.text)}</div>`) }
+    </div>`;
+  }
+  return paneHtml('A', roomState.A.name||'Игрок 1', a) + paneHtml('B', roomState.B.name||'Игрок 2', b);
+}
+
+async function commitLocalAnswer(who){
+  const q = questionOrder[currentIdx];
+  let text = '', skipped=false;
+  if(q.type==='choice'){
+    if(!pendingChoice){ showToast('Сначала выберите вариант в карточке выше'); return; }
+    text = pendingChoice;
+  } else {
+    const el = document.getElementById('local'+who+'Input');
+    text = el ? el.value.trim() : '';
+    if(!text){ showToast('Напишите ответ или нажмите «Пропустить»'); return; }
+  }
+  await postAnswer(who, q, text, skipped);
+  pendingChoice = null;
+  document.querySelectorAll('.choice-opt').forEach(x=>x.classList.remove('picked'));
+  renderPanes(q);
+  updateNextButtonState();
+}
+
+async function commitMyAnswer(){
+  const q = questionOrder[currentIdx];
+  let text='', skipped=false;
+  if(q.type==='choice'){
+    if(!pendingChoice){ showToast('Выберите один из вариантов'); return; }
+    text = pendingChoice;
+  } else {
+    const el = document.getElementById('myAnswerInput');
+    text = el ? el.value.trim() : '';
+    if(!text){ showToast('Напишите ответ или нажмите «Пропустить»'); return; }
+  }
+  myCommitted = true;
+  await postAnswer(role, q, text, skipped);
+  renderPanes(q);
+  showFollowupIfAny(q);
+  updateNextButtonState();
+}
+
+async function skipQuestion(){
+  const q = questionOrder[currentIdx];
+  if(mode==='local'){
+    const proms = [];
+    ['A','B'].forEach(who=>{
+      if(!getLocalAnswer(q.qid, who)) proms.push(postAnswer(who, q, '', true));
+    });
+    await Promise.all(proms);
+    renderPanes(q);
+    updateNextButtonState();
+    return;
+  }
+  myCommitted = true;
+  await postAnswer(role, q, '', true);
+  renderPanes(q);
+  updateNextButtonState();
+}
+
+async function postAnswer(r, q, text, skipped){
+  setLocalAnswerCache(q.qid, r, {text, skipped});
+  try{
+    const res = await api('/api/rooms/'+roomCode+'/answer', {method:'POST', body: JSON.stringify({role:r, qid:q.qid, text, skipped, level:q.level})});
+    applyRoomState(res.room);
+  }catch(e){
+    showToast('Не удалось сохранить ответ — проверьте соединение');
+  }
+}
+
+function refreshPartnerPaneVisibility(q){
+  const body = document.getElementById('partnerPaneBody');
+  if(!body) return;
+  const partnerRole = role==='A'?'B':'A';
+  const pAns = getLocalAnswer(q.qid, partnerRole);
+  if(!myCommitted){
+    body.className='pane-locked';
+    body.textContent = '🔒 Ответьте сами, чтобы увидеть ответ партнёра';
+    return;
+  }
+  if(!pAns){
+    body.className='pane-locked';
+    body.textContent = '⏳ Партнёр ещё отвечает...';
+    return;
+  }
+  if(pAns.skipped){
+    body.outerHTML = '<div class="pane-skipped" id="partnerPaneBody">Партнёр пропустил(а) этот вопрос</div>';
+  } else {
+    body.outerHTML = '<div class="pane-answer" id="partnerPaneBody">'+escapeHtml(pAns.text)+'</div>';
+  }
+}
+
+function showFollowupIfAny(q){
+  const fu = q.followUp || GENERIC_FOLLOWUPS[Math.floor(Math.random()*GENERIC_FOLLOWUPS.length)];
+  renderFollowup(fu);
+}
+function renderFollowup(text){
+  const area = document.getElementById('followupArea');
+  area.innerHTML = text ? `<div class="followup">💭 ${escapeHtml(text)}</div>` : '';
+}
+
+function updateNextButtonState(){
+  const q = questionOrder[currentIdx];
+  const nextBtn = document.getElementById('nextBtn');
+  const skipBtn = document.getElementById('skipBtn');
+  let ready = false;
+  if(mode==='local'){
+    ready = !!getLocalAnswer(q.qid,'A') && !!getLocalAnswer(q.qid,'B');
+    skipBtn.style.display = ready ? 'none' : 'inline-block';
+  } else {
+    const partnerRole = role==='A'?'B':'A';
+    ready = myCommitted && !!getLocalAnswer(q.qid, partnerRole);
+    skipBtn.style.display = myCommitted ? 'none' : 'inline-block';
+  }
+  nextBtn.disabled = !ready;
+  updateScores();
+}
+
+function updateScores(){
+  let scoreA=0, scoreB=0;
+  Object.keys(roomState.answers).forEach(qid=>{
+    const idx = parseInt(qid.replace('q',''));
+    const qq = questionOrder[idx];
+    if(!qq) return;
+    const w = (LEVELS.find(l=>l.id===qq.level)||{weight:1}).weight;
+    if(roomState.answers[qid].A && !roomState.answers[qid].A.skipped) scoreA += w;
+    if(roomState.answers[qid].B && !roomState.answers[qid].B.skipped) scoreB += w;
+  });
+  document.getElementById('scoreA').textContent = '🔥'+scoreA;
+  document.getElementById('scoreB').textContent = '🔥'+scoreB;
+  window._scoreA = scoreA; window._scoreB = scoreB;
+}
+
+async function goNextQuestion(){
+  currentIdx += 1;
+  try{
+    const res = await api('/api/rooms/'+roomCode+'/advance', {method:'POST', body: JSON.stringify({currentIndex: currentIdx})});
+    applyRoomState(res.room);
+  }catch(e){ /* локально уже продвинулись, ретраит поллинг */ }
+  renderQuestion();
+}
+
+/* =========================================================
+   FINAL ROUND — secret question
+========================================================= */
+function renderSecretPanes(){
+  updateSecretUI();
+  renderSecretExchange();
+  checkFinalReady();
+}
+
+function currentSecretTurn(){
+  if(mode==='local'){
+    if(!secretSubmitted.A) return 'A';
+    if(!secretSubmitted.B) return 'B';
+    return null;
+  }
+  return secretSubmitted[role] ? null : role;
+}
+
+function updateSecretUI(){
+  const label = document.getElementById('secretLabelMe');
+  const input = document.getElementById('secretInput');
+  const btn = document.getElementById('secretSubmitBtn');
+  const status = document.getElementById('secretStatus');
+  const turnRole = currentSecretTurn();
+
+  if(mode==='local'){
+    if(turnRole){
+      const turnName = turnRole==='A' ? (roomState.A.name||'Игрок 1') : (roomState.B.name||'Игрок 2');
+      label.textContent = 'Секретный вопрос от «'+turnName+'» партнёру';
+      input.disabled = false;
+      input.style.display = '';
+      btn.style.display = '';
+      status.textContent = (secretSubmitted.A||secretSubmitted.B) ? 'Написан 1 из 2 — теперь очередь второго игрока' : 'Шаг 1 из 2: сначала пишет '+turnName;
+    } else {
+      input.style.display = 'none';
+      btn.style.display = 'none';
+      status.textContent = 'Оба вопроса написаны 🎉';
+    }
+  } else {
+    if(secretSubmitted[role]){
+      input.disabled = true;
+      btn.style.display = 'none';
+      status.textContent = secretSubmitted[role==='A'?'B':'A'] ? 'Оба вопроса получены 🎉' : '⏳ Ваш вопрос отправлен. Ждём вопрос от партнёра...';
+    } else {
+      label.textContent = 'Ваш секретный вопрос партнёру';
+      input.disabled = false;
+      btn.style.display = '';
+      status.textContent = '';
+    }
+  }
+}
+
+async function submitSecret(){
+  const val = document.getElementById('secretInput').value.trim();
+  if(!val){ showToast('Напишите вопрос'); return; }
+  if(mode==='local'){
+    const turnRole = currentSecretTurn();
+    if(!turnRole){ return; }
+    secretText[turnRole] = val;
+    secretSubmitted[turnRole] = true;
+    try{ await api('/api/rooms/'+roomCode+'/secret', {method:'POST', body: JSON.stringify({role:turnRole, text:val})}); }catch(e){}
+    showToast('Вопрос от '+(turnRole==='A'?(roomState.A.name||'Игрок 1'):(roomState.B.name||'Игрок 2'))+' сохранён');
+    document.getElementById('secretInput').value='';
+  } else {
+    secretText[role] = val;
+    secretSubmitted[role] = true;
+    try{ await api('/api/rooms/'+roomCode+'/secret', {method:'POST', body: JSON.stringify({role, text:val})}); }catch(e){
+      showToast('Не удалось отправить — проверьте соединение');
+    }
+    document.getElementById('secretInput').value='';
+  }
+  updateSecretUI();
+  renderSecretExchange();
+  checkFinalReady();
+}
+
+function renderSecretExchange(){
+  const panes = document.getElementById('secretPanes');
+  if(secretSubmitted.A && secretSubmitted.B){
+    panes.innerHTML = `
+      <div class="pane"><div class="pane-head"><div class="pane-name">Вопрос для ${escapeHtml(roomState.B.name||partnerName||'партнёра')}</div></div><div class="pane-answer">${escapeHtml(secretText.A)}</div></div>
+      <div class="pane"><div class="pane-head"><div class="pane-name">Вопрос для ${escapeHtml(roomState.A.name||myName||'партнёра')}</div></div><div class="pane-answer">${escapeHtml(secretText.B)}</div></div>
+    `;
+  } else {
+    panes.innerHTML = '';
+  }
+}
+
+function checkFinalReady(){
+  const btn = document.getElementById('finalNextBtn');
+  btn.disabled = !(secretSubmitted.A && secretSubmitted.B);
+}
+
+/* =========================================================
+   MINI SESSION — психолог
+========================================================= */
+function goToSession(){
+  goTo('session');
+  document.getElementById('sessionLoading').style.display = 'flex';
+  document.getElementById('sessionContent').style.display = 'none';
+  document.getElementById('sessionError').style.display = 'none';
+  startSessionGeneration();
+}
+
+async function startSessionGeneration(){
+  if(roomState.sessionReport){
+    renderSession(roomState.sessionReport);
+    return;
+  }
+  const qMeta = questionOrder.map(q=>({qid:q.qid, level:q.level, category:(LEVELS.find(l=>l.id===q.level)||{}).name, q:q.q}));
+  try{
+    const res = await api('/api/rooms/'+roomCode+'/session', {method:'POST', body: JSON.stringify({questions:qMeta})});
+    if(res.room && res.room.sessionReport){
+      renderSession(res.room.sessionReport);
+    } else {
+      // сервер начал генерацию — ждём через поллинг
+      pollSessionResult();
+    }
+  }catch(e){
+    showSessionError();
+  }
+}
+
+function pollSessionResult(){
+  let attempts = 0;
+  if(sessionPollTimer) clearInterval(sessionPollTimer);
+  sessionPollTimer = setInterval(async ()=>{
+    attempts++;
+    try{
+      const st = await api('/api/rooms/'+roomCode);
+      if(st.room.sessionReport){
+        clearInterval(sessionPollTimer);
+        renderSession(st.room.sessionReport);
+      } else if(st.room.sessionStatus === 'error' || attempts > 20){
+        clearInterval(sessionPollTimer);
+        showSessionError();
+      }
+    }catch(e){
+      if(attempts > 20){ clearInterval(sessionPollTimer); showSessionError(); }
+    }
+  }, 1500);
+}
+
+function showSessionError(){
+  document.getElementById('sessionLoading').style.display = 'none';
+  document.getElementById('sessionError').style.display = 'block';
+}
+
+function renderSession(r){
+  document.getElementById('sessionLoading').style.display = 'none';
+  document.getElementById('sessionContent').style.display = 'block';
+  document.getElementById('sessOpening').textContent = r.opening || '';
+  fillList('sessStrengths', r.strengths);
+  fillList('sessGrow', r.growAreas);
+  fillList('sessTry', r.tryTogether);
+  fillList('sessStarters', r.conversationStarters);
+  document.getElementById('sessClosing').textContent = r.closing || '';
+}
+function fillList(id, arr){
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  (arr||[]).forEach(item=>{
+    const li = document.createElement('li');
+    li.textContent = item;
+    el.appendChild(li);
+  });
+}
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+function fillSummary(){
+  document.getElementById('sumA').textContent = window._scoreA||0;
+  document.getElementById('sumB').textContent = window._scoreB||0;
+  document.getElementById('sumALabel').textContent = (roomState.A.name||'Игрок 1').toUpperCase();
+  document.getElementById('sumBLabel').textContent = (roomState.B.name||'Игрок 2').toUpperCase();
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>
